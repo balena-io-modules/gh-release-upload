@@ -1,0 +1,76 @@
+#!/usr/bin/env node
+var fs = require( 'fs' )
+var path = require( 'path' )
+var gh = require( '../lib/upload' )
+var argv = require( 'yargs' )
+  .boolean( 'draft' )
+  .option( 'draft', {
+    description: 'Release is a draft',
+    type: 'boolean',
+  })
+  .option( 'name', {
+    description: 'Release name',
+    type: 'string',
+  })
+  .option( 'tag', {
+    description: 'Release tag',
+    type: 'string',
+  })
+  .usage('$0 [options] <assets>')
+  .argv
+
+var assets = argv._.map(( filename ) => {
+  return path.resolve( process.cwd(), filename )
+})
+
+if( process.env.GITHUB_TOKEN ) {
+  gh.authenticate({
+    type: 'token',
+    token: process.env.GITHUB_TOKEN
+  })
+}
+
+gh.getReleases({
+  name: argv.name,
+  draft: argv.draft,
+  tag: argv.tag
+}, ( error, releases ) => {
+
+  if( error ) {
+    console.error( error )
+    process.exit( 1 )
+  }
+
+  if( releases.length > 1 ) {
+    console.error( 'Ambiguous releases:', releases.map( r => r.name ) )
+    process.exit( 1 )
+  }
+
+  if( !releases.length ) {
+    console.error( 'No matching releases found' )
+    process.exit( 1 )
+  }
+
+  var release = releases.shift()
+
+  var events = gh.uploadAssets( release, assets, ( error, results ) => {
+
+    if( error ) {
+      console.error( error )
+      process.exit( 1 )
+    }
+
+    console.log( 'Done.' )
+
+  })
+
+  events.on( 'upload', ( filename ) => {
+    console.log( 'Uploading', path.basename( filename ), '...' )
+  })
+
+  events.on( 'uploaded', ( filename ) => {
+    console.log( 'Uploaded', path.basename( filename ) )
+    console.log( '' )
+  })
+
+})
