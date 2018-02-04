@@ -3,20 +3,38 @@ var fs = require( 'fs' )
 var path = require( 'path' )
 var gh = require( '../lib/upload' )
 var argv = require( 'yargs' )
-  .boolean( 'draft' )
+  .usage('$0 [options] <assets>')
+  .option( 'repo', {
+    alias: 'r',
+    description: 'Repository (owner/reponame)',
+    type: 'string',
+  })
   .option( 'draft', {
     description: 'Release is a draft',
     type: 'boolean',
   })
   .option( 'name', {
+    alias: 'n',
     description: 'Release name',
     type: 'string',
   })
   .option( 'tag', {
+    alias: 't',
     description: 'Release tag',
     type: 'string',
   })
-  .usage('$0 [options] <assets>')
+  .option( 'list', {
+    alias: 'l',
+    description: 'Only list currently available tags',
+    type: 'boolean',
+  })
+  .demandOption('repo')
+  .coerce('repo', function( value ) {
+    var [ owner, name ] = value.split( '/' )
+    return { owner, name }
+  })
+  .example( '$0 --list --repo jhermsmeier/example' )
+  .example( '$0 -r jhermsmeier/example --draft --name v1.4.0 dist/*' )
   .argv
 
 var assets = argv._.map(( filename ) => {
@@ -30,47 +48,74 @@ if( process.env.GITHUB_TOKEN ) {
   })
 }
 
-gh.getReleases({
-  name: argv.name,
-  draft: argv.draft,
-  tag: argv.tag
-}, ( error, releases ) => {
+function list() {
+  gh.getReleases({
+    draft: argv.draft,
+    owner: argv.repo.owner,
+    repo: argv.repo.name,
+  }, ( error, releases ) => {
+    if( error ) throw error
+    if( !releases.length ) {
+      console.error( 'No releases found' )
+      process.exit(1)
+    }
+    releases.forEach(( release ) => {
+      process.stdout.write( `  ${release.tag_name}` )
+      if( release.prerelease ) {
+        process.stdout.write( ` (prerelease)` )
+      }
+      process.stdout.write( '\n' )
+    })
+  })
+}
 
-  if( error ) {
-    console.error( error )
-    process.exit( 1 )
-  }
-
-  if( releases.length > 1 ) {
-    console.error( 'Ambiguous releases:', releases.map( r => r.name ) )
-    process.exit( 1 )
-  }
-
-  if( !releases.length ) {
-    console.error( 'No matching releases found' )
-    process.exit( 1 )
-  }
-
-  var release = releases.shift()
-
-  var events = gh.uploadAssets( release, assets, ( error, results ) => {
+function upload() {
+  gh.getReleases({
+    name: argv.name,
+    draft: argv.draft,
+    tag: argv.tag,
+    owner: argv.repo.owner,
+    repo: argv.repo.name,
+  }, ( error, releases ) => {
 
     if( error ) {
       console.error( error )
       process.exit( 1 )
     }
 
-    console.log( 'Done.' )
+    if( releases.length > 1 ) {
+      console.error( 'Ambiguous releases:', releases.map( r => r.name ) )
+      process.exit( 1 )
+    }
+
+    if( !releases.length ) {
+      console.error( 'No matching releases found' )
+      process.exit( 1 )
+    }
+
+    var release = releases.shift()
+
+    var events = gh.uploadAssets( release, assets, ( error, results ) => {
+
+      if( error ) {
+        console.error( error )
+        process.exit( 1 )
+      }
+
+      console.log( 'Done.' )
+
+    })
+
+    events.on( 'upload', ( filename ) => {
+      console.log( 'Uploading', path.basename( filename ), '...' )
+    })
+
+    events.on( 'uploaded', ( filename ) => {
+      console.log( 'Uploaded', path.basename( filename ) )
+      console.log( '' )
+    })
 
   })
+}
 
-  events.on( 'upload', ( filename ) => {
-    console.log( 'Uploading', path.basename( filename ), '...' )
-  })
-
-  events.on( 'uploaded', ( filename ) => {
-    console.log( 'Uploaded', path.basename( filename ) )
-    console.log( '' )
-  })
-
-})
+argv.list ? list() : upload()
