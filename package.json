@@ -1,23 +1,29 @@
 {
   "name": "gh-release-upload",
   "version": "0.0.0",
-  "description": "",
+  "description": "Upload files to GitHub releases",
   "author": "Jonas Hermsmeier <jhermsmeier@gmail.com> (https://jhermsmeier.de)",
   "license": "MIT",
-  "keywords": [],
+  "keywords": [
+    "github",
+    "gh",
+    "upload",
+    "release",
+    "releases",
+    "draft",
+    "cli"
+  ],
   "main": "lib/upload.js",
   "bin": {
     "gh-release-upload": "bin/gh-release-upload"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "scripts": {},
   "dependencies": {
-    "@octokit/rest": "^14.0.5",
+    "@octokit/rest": "^14.0.8",
     "async": "^2.6.0",
     "debug": "^3.1.0",
     "mime-types": "^2.1.17",
-    "yargs": "^10.1.1"
+    "yargs": "^11.0.0"
   },
   "devDependencies": {},
   "peerDependencies": {},
