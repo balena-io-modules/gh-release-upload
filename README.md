@@ -8,7 +8,7 @@ Upload files to GitHub releases
 ## Install via [npm](https://npmjs.com)
 
 ```sh
-$ npm install --global gh-release-upload
+$ npm install --global jhermsmeier/gh-release-upload
 ```
 
 ## Usage
