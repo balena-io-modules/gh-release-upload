@@ -1,7 +1,7 @@
 # gh-release-upload
-[![npm](https://img.shields.io/npm/v/gh-release-upload.svg?style=flat-square)](https://npmjs.com/package/gh-release-upload)
-[![npm license](https://img.shields.io/npm/l/gh-release-upload.svg?style=flat-square)](https://npmjs.com/package/gh-release-upload)
-[![npm downloads](https://img.shields.io/npm/dm/gh-release-upload.svg?style=flat-square)](https://npmjs.com/package/gh-release-upload)
+<!-- [![npm](https://img.shields.io/npm/v/gh-release-upload.svg?style=flat-square)](https://npmjs.com/package/gh-release-upload) -->
+<!-- [![npm license](https://img.shields.io/npm/l/gh-release-upload.svg?style=flat-square)](https://npmjs.com/package/gh-release-upload) -->
+<!-- [![npm downloads](https://img.shields.io/npm/dm/gh-release-upload.svg?style=flat-square)](https://npmjs.com/package/gh-release-upload) -->
 
 Upload files to GitHub releases
 
