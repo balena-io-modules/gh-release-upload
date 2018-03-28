@@ -1,75 +1,333 @@
 #!/usr/bin/env node
-var fs = require( 'fs' )
-var path = require( 'path' )
-var gh = require( '../lib/upload' )
-var argv = require( 'yargs' )
-  .usage('$0 [options] <assets>')
+var yargs = require( 'yargs' )
+var COMMAND_USAGE = `Commands options:
+
+  list [options]:
+    --draft       Include drafts  [boolean]
+    --prerelease  Include prereleases  [boolean]
+    --all         Show all release types  [boolean]
+
+  create [options]:
+    --name, -n    Release name  [string]
+    --tag, -t     Release tag  [string] [required]
+    --commit, -c  Release target commitish  [string] [default: "master"]
+    --body, -m    Release message body  [string]
+    --update      Update release data  [boolean]
+    --draft       Release is a draft  [boolean]
+    --prerelease  Release is a prerelease  [boolean]
+
+  delete [options]:
+    --tag, -t     Release tag  [string] [required]
+
+  info [options]:
+    --tag, -t     Release tag  [string] [required]
+
+  upload [options] <assets>:
+    --name, -n    Release name  [string]
+    --tag, -t     Release tag  [string] [required]
+    --draft       Release is a draft  [boolean]
+    --prerelease  Release is a prerelease  [boolean]`
+
+yargs
+  .wrap( null )
+  .demandCommand( 1, 1, '', '' )
+  .epilogue( COMMAND_USAGE )
   .option( 'repo', {
     alias: 'r',
     description: 'Repository (owner/reponame)',
+    group: 'General options:',
+    requiresArg: true,
     type: 'string',
   })
-  .option( 'draft', {
-    description: 'Release is a draft',
-    type: 'boolean',
-  })
-  .option( 'name', {
-    alias: 'n',
-    description: 'Release name',
-    type: 'string',
-  })
-  .option( 'tag', {
-    alias: 't',
-    description: 'Release tag',
-    type: 'string',
-  })
-  .option( 'list', {
-    alias: 'l',
-    description: 'Only list currently available tags',
-    type: 'boolean',
-  })
-  .demandOption('repo')
-  .coerce('repo', function( value ) {
+  .demandOption( 'repo' )
+  .coerce( 'repo', function( value ) {
     var [ owner, name ] = value.split( '/' )
     return { owner, name }
   })
-  .example( '$0 --list --repo jhermsmeier/example' )
-  .example( '$0 -r jhermsmeier/example --draft --name v1.4.0 dist/*' )
-  .argv
-
-var assets = argv._.map(( filename ) => {
-  return path.resolve( process.cwd(), filename )
-})
-
-if( process.env.GITHUB_TOKEN ) {
-  gh.authenticate({
-    type: 'token',
-    token: process.env.GITHUB_TOKEN
+  .option( 'help', {
+    alias: 'h',
+    description: 'Show help',
+    type: 'boolean',
   })
-}
+  .option( 'version', {
+    alias: 'v',
+    description: 'Show version number',
+    type: 'boolean',
+  })
 
-function list() {
+yargs.command( 'list', 'List releases', function( yargs ) {
+  return yargs.usage( '$0 list [options]' )
+    .option( 'draft', {
+      description: 'Include drafts',
+      group: 'List options:',
+      type: 'boolean',
+    })
+    .option( 'prerelease', {
+      description: 'Include prereleases',
+      group: 'List options:',
+      type: 'boolean',
+    })
+    .option( 'all', {
+      description: 'Show all release types',
+      group: 'List options:',
+      type: 'boolean',
+    })
+}, function( argv ) {
+
+  console.log( 'List', argv )
+
+  var gh = require( '../lib/upload' )
+
+  if( process.env.GITHUB_TOKEN ) {
+    gh.authenticate({
+      type: 'token',
+      token: process.env.GITHUB_TOKEN
+    })
+  }
+
   gh.getReleases({
-    draft: argv.draft,
     owner: argv.repo.owner,
     repo: argv.repo.name,
+    draft: argv.draft,
+    prerelease: argv.prerelease,
+    all: argv.all,
   }, ( error, releases ) => {
-    if( error ) throw error
+
+    if( error ) {
+      console.error( error )
+      process.exit( 1 )
+    }
+
     if( !releases.length ) {
       console.error( 'No releases found' )
       process.exit(1)
     }
+
     releases.forEach(( release ) => {
       process.stdout.write( `  ${release.tag_name}` )
-      if( release.prerelease ) {
+      if( release.draft && release.prerelease ) {
+        process.stdout.write( ` (prerelease draft)` )
+      } else if( release.prerelease ) {
         process.stdout.write( ` (prerelease)` )
+      } else if( release.draft ) {
+        process.stdout.write( ` (draft)` )
       }
       process.stdout.write( '\n' )
     })
-  })
-}
 
-function upload() {
+  })
+
+})
+
+yargs.command( 'create', 'Create a release', function( yargs ) {
+  return yargs.usage( '$0 create [options]' )
+    .demandOption( 'tag' )
+    .option( 'name', {
+      alias: 'n',
+      description: 'Release name',
+      group: 'Create options:',
+      type: 'string',
+    })
+    .option( 'tag', {
+      alias: 't',
+      description: 'Release tag',
+      group: 'Create options:',
+      type: 'string',
+    })
+    .option( 'commit', {
+      alias: 'c',
+      description: 'Release target commitish',
+      default: 'master',
+      group: 'Create options:',
+      type: 'string',
+    })
+    .option( 'body', {
+      alias: 'm',
+      description: 'Release message body',
+      group: 'Create options:',
+      type: 'string',
+    })
+    .option( 'update', {
+      description: 'Update release data',
+      group: 'Create options:',
+      type: 'boolean',
+    })
+    .option( 'draft', {
+      description: 'Release is a draft',
+      group: 'Create options:',
+      type: 'boolean',
+    })
+    .option( 'prerelease', {
+      description: 'Release is a prerelease',
+      group: 'Create options:',
+      type: 'boolean',
+    })
+}, function( argv ) {
+
+  var gh = require( '../lib/upload' )
+
+  if( process.env.GITHUB_TOKEN ) {
+    gh.authenticate({
+      type: 'token',
+      token: process.env.GITHUB_TOKEN
+    })
+  }
+
+  if( argv.update ) {
+    gh.editRelease({
+      owner: argv.repo.owner,
+      repo: argv.repo.name,
+      tag: argv.tag,
+      commit: argv.commit,
+      draft: argv.draft,
+      body: argv.body,
+      prerelease: argv.prerelease,
+    }, ( error, result ) => {
+
+      if( error ) {
+        console.error( error )
+        process.exit( 1 )
+      }
+
+      console.log( result )
+
+    })
+  } else {
+    gh.createRelease({
+      owner: argv.repo.owner,
+      repo: argv.repo.name,
+      tag: argv.tag,
+      commit: argv.commit,
+      draft: argv.draft,
+      body: argv.body,
+      prerelease: argv.prerelease,
+    }, ( error, result ) => {
+
+      if( error ) {
+        console.error( error )
+        process.exit( 1 )
+      }
+
+      console.log( result )
+
+    })
+  }
+
+})
+
+yargs.command( 'delete', 'Delete a release', function( yargs ) {
+  return yargs.usage( '$0 delete [options]' )
+    .demandOption( 'tag' )
+    .option( 'tag', {
+      alias: 't',
+      description: 'Release tag',
+      group: 'Delete options:',
+      type: 'string',
+    })
+}, function( argv ) {
+
+  var gh = require( '../lib/upload' )
+
+  if( process.env.GITHUB_TOKEN ) {
+    gh.authenticate({
+      type: 'token',
+      token: process.env.GITHUB_TOKEN
+    })
+  }
+
+  gh.deleteRelease({
+    owner: argv.repo.owner,
+    repo: argv.repo.name,
+    tag: argv.tag,
+  }, ( error, result ) => {
+
+    if( error ) {
+      console.error( error )
+      process.exit( 1 )
+    }
+
+    console.log( result )
+
+  })
+
+})
+
+yargs.command( 'info', 'Get release data', function( yargs ) {
+  return yargs.usage( '$0 info [options]' )
+    .demandOption( 'tag' )
+    .option( 'tag', {
+      alias: 't',
+      description: 'Release tag',
+      group: 'Info options:',
+      type: 'string',
+    })
+}, function( argv ) {
+
+  var gh = require( '../lib/upload' )
+
+  if( process.env.GITHUB_TOKEN ) {
+    gh.authenticate({
+      type: 'token',
+      token: process.env.GITHUB_TOKEN
+    })
+  }
+
+  gh.getRelease({
+    owner: argv.repo.owner,
+    repo: argv.repo.name,
+    tag: argv.tag,
+  }, ( error, result ) => {
+
+    if( error ) {
+      console.error( error )
+      process.exit( 1 )
+    }
+
+    console.log( result )
+
+  })
+
+})
+
+yargs.command( 'upload', 'Upload assets to a release', function( yargs ) {
+  return yargs.usage( '$0 upload [options] <assets>' )
+    .demandOption( 'tag' )
+    .option( 'name', {
+      alias: 'n',
+      description: 'Release name',
+      group: 'Upload options:',
+      type: 'string',
+    })
+    .option( 'tag', {
+      alias: 't',
+      description: 'Release tag',
+      group: 'Upload options:',
+      type: 'string',
+    })
+    .option( 'draft', {
+      description: 'Release is a draft',
+      group: 'Upload options:',
+      type: 'boolean',
+    })
+    .option( 'prerelease', {
+      description: 'Release is a prerelease',
+      group: 'Upload options:',
+      type: 'boolean',
+    })
+}, function( argv ) {
+
+  var gh = require( '../lib/upload' )
+
+  if( process.env.GITHUB_TOKEN ) {
+    gh.authenticate({
+      type: 'token',
+      token: process.env.GITHUB_TOKEN
+    })
+  }
+
+  // Remove the command name itself as first argument
+  void argv._.shift()
+
   gh.getReleases({
     name: argv.name,
     draft: argv.draft,
@@ -93,7 +351,11 @@ function upload() {
       process.exit( 1 )
     }
 
+    var path = require( 'path' )
     var release = releases.shift()
+    var assets = argv._.map(( filename ) => {
+      return path.resolve( process.cwd(), filename )
+    })
 
     var events = gh.uploadAssets( release, assets, ( error, results ) => {
 
@@ -116,6 +378,7 @@ function upload() {
     })
 
   })
-}
 
-argv.list ? list() : upload()
+})
+
+yargs.argv
