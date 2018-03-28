@@ -53,7 +53,7 @@ Commands options:
     --tag, -t     Release tag  [string] [required]
 
   upload [options] <assets>:
-    --tag, -t     Release tag  [string] [required]
+    --tag, -t     Release tag  [string]
     --name, -n    Release name  [string]
     --draft       Release is a draft  [boolean]
     --prerelease  Release is a prerelease  [boolean]

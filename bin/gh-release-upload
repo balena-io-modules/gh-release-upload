@@ -23,7 +23,7 @@ var COMMAND_USAGE = `Commands options:
     --tag, -t     Release tag  [string] [required]
 
   upload [options] <assets>:
-    --tag, -t     Release tag  [string] [required]
+    --tag, -t     Release tag  [string]
     --name, -n    Release name  [string]
     --draft       Release is a draft  [boolean]
     --prerelease  Release is a prerelease  [boolean]`
@@ -291,7 +291,6 @@ yargs.command( 'info', 'Get release data', function( yargs ) {
 
 yargs.command( 'upload', 'Upload assets to a release', function( yargs ) {
   return yargs.usage( '$0 upload [options] <assets>' )
-    .demandOption( 'tag' )
     .option( 'name', {
       alias: 'n',
       description: 'Release name',
