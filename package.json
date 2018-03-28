@@ -19,11 +19,11 @@
   },
   "scripts": {},
   "dependencies": {
-    "@octokit/rest": "^14.0.8",
+    "@octokit/rest": "^15.2.5",
     "async": "^2.6.0",
     "debug": "^3.1.0",
-    "mime-types": "^2.1.17",
-    "yargs": "^11.0.0"
+    "mime-types": "^2.1.18",
+    "yargs": "^11.1.0"
   },
   "devDependencies": {},
   "peerDependencies": {},
