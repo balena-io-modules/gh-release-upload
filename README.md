@@ -38,8 +38,8 @@ Commands options:
     --all         Show all release types  [boolean]
 
   create [options]:
-    --name, -n    Release name  [string]
     --tag, -t     Release tag  [string] [required]
+    --name, -n    Release name  [string]
     --commit, -c  Release target commitish  [string] [default: "master"]
     --body, -m    Release message body  [string]
     --update      Update release data  [boolean]
@@ -53,8 +53,8 @@ Commands options:
     --tag, -t     Release tag  [string] [required]
 
   upload [options] <assets>:
-    --name, -n    Release name  [string]
     --tag, -t     Release tag  [string] [required]
+    --name, -n    Release name  [string]
     --draft       Release is a draft  [boolean]
     --prerelease  Release is a prerelease  [boolean]
 ```
