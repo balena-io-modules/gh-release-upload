@@ -40,6 +40,7 @@ Commands options:
   create [options]:
     --tag, -t     Release tag  [string] [required]
     --name, -n    Release name  [string]
+    --rename      New release name  [string]
     --commit, -c  Release target commitish  [string] [default: "master"]
     --body, -m    Release message body  [string]
     --update      Update release data  [boolean]
