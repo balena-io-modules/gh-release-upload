@@ -10,6 +10,7 @@ var COMMAND_USAGE = `Commands options:
   create [options]:
     --tag, -t     Release tag  [string] [required]
     --name, -n    Release name  [string]
+    --rename      New release name  [string]
     --commit, -c  Release target commitish  [string] [default: "master"]
     --body, -m    Release message body  [string]
     --update      Update release data  [boolean]
@@ -27,6 +28,11 @@ var COMMAND_USAGE = `Commands options:
     --name, -n    Release name  [string]
     --draft       Release is a draft  [boolean]
     --prerelease  Release is a prerelease  [boolean]`
+
+process.on( 'unhandledRejection', (error) => {
+  console.error( error )
+  process.exit( 1 )
+})
 
 yargs
   .wrap( null )
@@ -74,8 +80,6 @@ yargs.command( 'list', 'List releases', function( yargs ) {
     })
 }, function( argv ) {
 
-  console.log( 'List', argv )
-
   var gh = require( '../lib/upload' )
 
   if( process.env.GITHUB_TOKEN ) {
@@ -104,13 +108,13 @@ yargs.command( 'list', 'List releases', function( yargs ) {
     }
 
     releases.forEach(( release ) => {
-      process.stdout.write( `  ${release.tag_name}` )
+      process.stdout.write( `  ${release.name || release.tag_name} (id: ${release.id}, tag: ${release.tag_name}, target: ${release.target_commitish}, assets: ${release.assets.length})` )
       if( release.draft && release.prerelease ) {
-        process.stdout.write( ` (prerelease draft)` )
+        process.stdout.write( ` [prerelease draft]` )
       } else if( release.prerelease ) {
-        process.stdout.write( ` (prerelease)` )
+        process.stdout.write( ` [prerelease]` )
       } else if( release.draft ) {
-        process.stdout.write( ` (draft)` )
+        process.stdout.write( ` [draft]` )
       }
       process.stdout.write( '\n' )
     })
@@ -124,7 +128,12 @@ yargs.command( 'create', 'Create a release', function( yargs ) {
     .demandOption( 'tag' )
     .option( 'name', {
       alias: 'n',
-      description: 'Release name',
+      description: 'Current release name',
+      group: 'Create options:',
+      type: 'string',
+    })
+    .option( 'rename', {
+      description: 'New release name',
       group: 'Create options:',
       type: 'string',
     })
@@ -173,45 +182,27 @@ yargs.command( 'create', 'Create a release', function( yargs ) {
     })
   }
 
-  if( argv.update ) {
-    gh.editRelease({
-      owner: argv.repo.owner,
-      repo: argv.repo.name,
-      tag: argv.tag,
-      commit: argv.commit,
-      draft: argv.draft,
-      body: argv.body,
-      prerelease: argv.prerelease,
-    }, ( error, result ) => {
+  gh.createRelease({
+    owner: argv.repo.owner,
+    repo: argv.repo.name,
+    name: argv.name,
+    rename: argv.rename,
+    tag: argv.tag,
+    commit: argv.commit,
+    draft: argv.draft,
+    body: argv.body,
+    prerelease: argv.prerelease,
+    update: argv.update,
+  }, ( error, result ) => {
 
-      if( error ) {
-        console.error( error )
-        process.exit( 1 )
-      }
+    if( error ) {
+      console.error( error )
+      process.exit( 1 )
+    }
 
-      console.log( result )
+    console.log( result )
 
-    })
-  } else {
-    gh.createRelease({
-      owner: argv.repo.owner,
-      repo: argv.repo.name,
-      tag: argv.tag,
-      commit: argv.commit,
-      draft: argv.draft,
-      body: argv.body,
-      prerelease: argv.prerelease,
-    }, ( error, result ) => {
-
-      if( error ) {
-        console.error( error )
-        process.exit( 1 )
-      }
-
-      console.log( result )
-
-    })
-  }
+  })
 
 })
 
@@ -328,11 +319,12 @@ yargs.command( 'upload', 'Upload assets to a release', function( yargs ) {
   void argv._.shift()
 
   gh.getReleases({
-    name: argv.name,
-    draft: argv.draft,
-    tag: argv.tag,
     owner: argv.repo.owner,
     repo: argv.repo.name,
+    tag: argv.tag,
+    name: argv.name,
+    draft: argv.draft,
+    prerelease: argv.prerelease,
   }, ( error, releases ) => {
 
     if( error ) {
@@ -341,7 +333,7 @@ yargs.command( 'upload', 'Upload assets to a release', function( yargs ) {
     }
 
     if( releases.length > 1 ) {
-      console.error( 'Ambiguous releases:', releases.map( r => r.name ) )
+      console.error( `Ambiguous releases:\n${releases.map( r => `  ${r.name || r.tag } (tag: ${r.tag}, id: ${r.id})\n` )}` )
       process.exit( 1 )
     }
 
