@@ -3,32 +3,32 @@ var yargs = require( 'yargs' )
 var COMMAND_USAGE = `Commands options:
 
   list [options]:
-    --draft         Include drafts  [boolean]
-    --prerelease    Include prereleases  [boolean]
-    --all           Show all release types  [boolean]
+    --draft        Include drafts  [boolean]
+    --prerelease   Include prereleases  [boolean]
+    --all          Show all release types  [boolean]
 
   create [options]:
-    --tag, -t       Release tag  [string] [required]
-    --name, -n      Release name  [string]
-    --rename        New release name  [string]
-    --commit, -c    Release target commitish  [string] [default: "master"]
-    --body, -m      Release message body  [string]
-    --update        Update release data  [boolean]
-    --draft         Release is a draft  [boolean]
-    --prerelease    Release is a prerelease  [boolean]
+    --tag, -t      Release tag  [string] [required]
+    --name, -n     Release name  [string]
+    --rename       New release name  [string]
+    --commit, -c   Release target commitish  [string] [default: "master"]
+    --body, -m     Release message body  [string]
+    --update       Update release data  [boolean]
+    --draft        Release is a draft  [boolean]
+    --prerelease   Release is a prerelease  [boolean]
 
   delete [options]:
-    --tag, -t       Release tag  [string] [required]
+    --tag, -t      Release tag  [string] [required]
 
   info [options]:
-    --tag, -t       Release tag  [string] [required]
+    --tag, -t      Release tag  [string] [required]
 
-  upload [options]  <assets>:
-    --tag, -t       Release tag  [string]
-    --name, -n      Release name  [string]
-    --draft         Release is a draft  [boolean]
-    --prerelease    Release is a prerelease  [boolean]
-    --skip-existing Ignore 'already_exists' errors [boolean]`
+  upload [options] <assets>:
+    --tag, -t      Release tag  [string]
+    --name, -n     Release name  [string]
+    --draft        Release is a draft  [boolean]
+    --prerelease   Release is a prerelease  [boolean]
+    --skipExisting Ignore 'already_exists' errors [boolean]`
 
 process.on( 'unhandledRejection', (error) => {
   console.error( error )
