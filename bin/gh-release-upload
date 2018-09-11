@@ -374,6 +374,16 @@ yargs.command( 'upload', 'Upload assets to a release', function( yargs ) {
       console.log( '' )
     })
 
+    events.on( 'skipped', ( filename, error ) => {
+      var reason = 'Unknown'
+      try {
+        reason = JSON.parse(error.message).errors
+          .map((e) => `${e.resource} ${e.code}`).join(', ')
+      } catch( e ) {}
+      console.log( 'Skipped', path.basename( filename ), '- Reason:', reason )
+      console.log( '' )
+    })
+
   })
 
 })
