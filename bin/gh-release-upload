@@ -17,7 +17,7 @@ var COMMAND_USAGE = `Commands options:
     --draft          Release is a draft  [boolean]
     --prerelease     Release is a prerelease  [boolean]
 
-  delete [options]  :
+  delete [options]:
     --tag, -t        Release tag  [string] [required]
 
   info [options]:
@@ -28,7 +28,7 @@ var COMMAND_USAGE = `Commands options:
     --name, -n       Release name  [string]
     --draft          Release is a draft  [boolean]
     --prerelease     Release is a prerelease  [boolean]
-    --skip-existing Ignore 'already_exists' errors [boolean]`
+    --skip-existing  Ignore 'already_exists' errors [boolean]`
 
 process.on( 'unhandledRejection', (error) => {
   console.error( error )
